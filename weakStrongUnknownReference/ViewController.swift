@@ -29,17 +29,17 @@ class ViewController: UIViewController {
 
 
         kelvin = Person(name: "Kelvin")
-        iphone = Gadget(model: "iPhone 8 Plus")
-        kelvin!.gadget = iphone// if these are removed the classes get deinit
-        iphone!.owner = kelvin // there is a strong relationship between instance of kelvin's property gadget and gadget's instance
+        kelvin!.gadget = Gadget(model: "iPhone 8 Plus", owner: kelvin!)
+//        kelvin!.gadget = iphone if these are removed the classes get deinit
+//        iphone!.owner = kelvin  there is a strong relationship between instance of kelvin's property gadget and gadget's instance
         // if one of the properties is not set (ex kelvin!.gadget) they both get deinit
         // this is called a strong reference cycle, even if they are both set to nil they don't get deinit.
         kelvin = nil
-        iphone = nil
         // with this strong reference type if the instance of class kelvin also references one of its properties of another class the classes never deinit
-        print(kelvin?.gadget)
         // they are nil now but still don't get deinit staying and hogging up the memory allocation.
         // strong reference cycles happen when their is a strong reference between two classes. Without a a different reference type, it is impossible to delete either class.
+        // unowned references are similar to a weak reference the difference is that they always have a value when deallocated they will not become nil. They are non optional types
+        // Use an unowned reference for when we always know that there is going to be a reference to something that has not been deallocated
     }
 
     class Person {
@@ -48,7 +48,9 @@ class ViewController: UIViewController {
             self.name = name
             print("\(name) is being initialized")
         }
-        weak var gadget: Gadget? // if we make this property weak it should stop a strong reference cycle.
+        var gadget: Gadget? // if we make this property weak it should stop a strong reference cycle.
+        // when a weak reference is deallocated ARC automatically sets the reference to nil
+        // weak references become nil whenever they are attempted to be deallocated
         deinit {
             print("\(name) is being deinitialized")
         }
@@ -56,11 +58,13 @@ class ViewController: UIViewController {
      
     class Gadget {
         let model: String
-        init(model: String) {
+        init(model: String, owner: Person) {
             self.model = model
+            self.owner = owner
             print("\(model) is being initialized")
         }
-        var owner: Person?
+        unowned var owner: Person // this is different than a weak gadget. Here a person can own a gadget but a gadget must have an owner
+        // with this we see that a gadget must have an owner to be init. If that owner is deleted then it is also deleted. 
         deinit {
             print("\(model) is being deinitialized")
         }
